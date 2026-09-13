@@ -1,11 +1,17 @@
 package com.portfolio.ratelimiter.config;
 
 import com.portfolio.ratelimiter.ratelimit.RateLimiter;
+import com.portfolio.ratelimiter.ratelimit.RedisTokenBucketRateLimiter;
 import com.portfolio.ratelimiter.ratelimit.SlidingWindowRateLimiter;
 import com.portfolio.ratelimiter.ratelimit.TokenBucketRateLimiter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.scripting.support.ResourceScriptSource;
 
 @Configuration
 public class RateLimiterConfig {
@@ -20,12 +26,25 @@ public class RateLimiterConfig {
     private long windowMillis;
 
     @Bean
-    public RateLimiter rateLimiter() {
+    public RateLimiter rateLimiter(StringRedisTemplate redis) {
+        long windowSeconds = Math.max(1, windowMillis / 1000);
         return switch (implementation) {
+            case "token-bucket"   -> new TokenBucketRateLimiter(capacity, windowMillis);
             case "sliding-window" -> new SlidingWindowRateLimiter(capacity, windowMillis);
-            case "token-bucket" -> new TokenBucketRateLimiter(capacity, windowMillis);
+
+            // NAIVE distributed version for now (no script). Changed in Step 4.
+            case "redis-token-bucket" -> new RedisTokenBucketRateLimiter(
+                    redis, capacity, windowSeconds);
+
             default -> throw new IllegalStateException(
-                "Unknown ratelimiter.implementation: " + implementation);
+                    "Unknown ratelimiter.implementation: " + implementation);
         };
+    }
+
+    private RedisScript<Long> loadScript(String classpathLocation) {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptSource(new ResourceScriptSource(new ClassPathResource(classpathLocation)));
+        script.setResultType(Long.class);
+        return script;
     }
 }
