@@ -4,6 +4,7 @@ import com.portfolio.ratelimiter.ratelimit.RateLimiter;
 import com.portfolio.ratelimiter.ratelimit.RedisTokenBucketRateLimiter;
 import com.portfolio.ratelimiter.ratelimit.SlidingWindowRateLimiter;
 import com.portfolio.ratelimiter.ratelimit.TokenBucketRateLimiter;
+import com.portfolio.ratelimiter.ratelimit.RedisSlidingWindowRateLimiter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,8 +37,11 @@ public class RateLimiterConfig {
             case "redis-token-bucket" -> new RedisTokenBucketRateLimiter(
                 redis, loadScript("scripts/token_bucket.lua"), capacity, windowSeconds);
 
+            case "redis-sliding-window" -> new RedisSlidingWindowRateLimiter(
+                redis, loadScript("scripts/sliding_window.lua"), capacity, windowMillis);
+            
             default -> throw new IllegalStateException(
-                    "Unknown ratelimiter.implementation: " + implementation);
+                "Unknown ratelimiter.implementation: " + implementation);
         };
     }
 
