@@ -32,9 +32,9 @@ public class RateLimiterConfig {
             case "token-bucket"   -> new TokenBucketRateLimiter(capacity, windowMillis);
             case "sliding-window" -> new SlidingWindowRateLimiter(capacity, windowMillis);
 
-            // NAIVE distributed version for now (no script). Changed in Step 4.
+            // Fixed distributed version.
             case "redis-token-bucket" -> new RedisTokenBucketRateLimiter(
-                    redis, capacity, windowSeconds);
+                redis, loadScript("scripts/token_bucket.lua"), capacity, windowSeconds);
 
             default -> throw new IllegalStateException(
                     "Unknown ratelimiter.implementation: " + implementation);
