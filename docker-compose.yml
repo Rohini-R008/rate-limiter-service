@@ -4,23 +4,36 @@ services:
     ports:
       - "6379:6379"
 
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ratelimiter
+      POSTGRES_USER: ratelimiter
+      POSTGRES_PASSWORD: ratelimiter
+    ports:
+      - "5432:5432"
+
   app1:
     build: .
     environment:
       SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ratelimiter
       RATELIMITER_IMPLEMENTATION: redis-token-bucket
       APP_INSTANCE_ID: app1
     depends_on:
       - redis
+      - postgres
 
   app2:
     build: .
     environment:
       SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ratelimiter
       RATELIMITER_IMPLEMENTATION: redis-token-bucket
       APP_INSTANCE_ID: app2
     depends_on:
       - redis
+      - postgres
 
   nginx:
     image: nginx:alpine
