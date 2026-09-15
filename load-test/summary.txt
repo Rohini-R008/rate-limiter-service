@@ -1,0 +1,19 @@
+================ LOAD TEST SUMMARY ================
+configured limit (CAPACITY): 100
+total requests: 38045   overall throughput: ~634 req/s
+
+--- latency added by the rate-limit + detection path ---
+through filter  (filtered_latency): p50=1.7ms  p95=3.6ms  p99=7.5ms  max=41.1ms
+control/bypass  (control_latency) : p50=1.4ms  p95=2.4ms  p99=4.0ms  max=47.8ms
+
+--- rate-limit behavior under load (single hammered key) ---
+allowed (200): 400   throttled (429): 0
+(exact per-window enforcement is proven by the isolated burst test and the
+ Phase 2 DistributedRateLimitIT; this line reports behavior under mixed load)
+
+--- attacker flagging ---
+Verify in Postgres / the dashboard that these keys were flagged:
+  attacker-hammer-1789469026212   -> velocity / rate limiting
+  attacker-enum-1789469026212     -> endpoint_enumeration
+  attacker-cred-1789469026212     -> credential_stuffing
+==================================================
