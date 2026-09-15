@@ -30,17 +30,26 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final EndpointCostResolver costResolver;
     private final AbuseDetectionService detection;
     private final EscalationService escalation;
+    private final com.portfolio.ratelimiter.metrics.MetricsService metrics;
 
     public RateLimitFilter(RateLimiter rateLimiter,
                            @Value("${app.instance-id:local}") String instanceId,
                            EndpointCostResolver costResolver,
                            AbuseDetectionService detection,
-                           EscalationService escalation) {
+                           EscalationService escalation,
+                           com.portfolio.ratelimiter.metrics.MetricsService metrics) {
         this.rateLimiter = rateLimiter;
         this.instanceId = instanceId;
         this.costResolver = costResolver;
         this.detection = detection;
         this.escalation = escalation;
+        this.metrics = metrics;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        // dashboard endpoints are read-only and must not consume rate budget
+        return request.getRequestURI().startsWith("/api/dashboard");
     }
 
     @Override
@@ -49,6 +58,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     FilterChain chain) throws ServletException, IOException {
         response.setHeader("X-Instance-Id", instanceId);
 
+        metrics.recordRequest();
+        
         String apiKey = request.getHeader(API_KEY_HEADER);
         if (apiKey == null || apiKey.isBlank()) {
             reject(response, HttpServletResponse.SC_BAD_REQUEST,
