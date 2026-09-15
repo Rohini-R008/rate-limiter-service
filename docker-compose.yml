@@ -44,3 +44,10 @@ services:
     depends_on:
       - app1
       - app2
+
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "3000:80"
+    depends_on:
+      - nginx
