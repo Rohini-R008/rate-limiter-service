@@ -85,8 +85,8 @@ before the rate limiter capped it, so it never escalated to a ban:
 The React dashboard renders these as a live bar chart plus the abuse-events
 table, refreshing every 3 seconds.
 
-The running dashboard is captured in `dashboard/screenshot-volume.png` (the
-request-volume chart) and `dashboard/screenshot-events.png` (the abuse-events
+The running dashboard is captured in ![Request volume chart](dashboard/screenshot-volume.png) (the
+request-volume chart) and ![Abuse events table](dashboard/screenshot-events.png) (the abuse-events
 table with all three attacker profiles flagged, escalating LOG_ONLY ->
 TEMP_BLOCK, plus active bans counting down). These were generated with the rate
 limit temporarily raised so the enumeration rule could reach its distinct-ID
